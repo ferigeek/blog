@@ -17,10 +17,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
-        if self.first_name is not None:
             return f'{self.first_name} - {self.last_name}'
-        else:
-            return self.email 
 
 
 class Post(models.Model):
