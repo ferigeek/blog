@@ -23,7 +23,7 @@ urlpatterns = [
     path('posts', views.postsView, name='posts'),
     path('posts/<int:id>', views.postView, name="post"),
     path('posts/<int:id>/comments', views.getCommentOfPostView, name='get_comment_post'),
-    # path('comments')
-    # path('comments'/<int:id>),
-    # path('categories'),
+    path('comments', views.commentsView, name='comments'),
+    path('comments/<int:id>', views.commentView, name='comment'),
+    path('categories', views.categoryView, name='categories'),
 ]

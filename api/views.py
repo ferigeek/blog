@@ -7,6 +7,8 @@ from . import models
 from . import serializers
 
 
+# /post
+
 @api_view(['GET', 'POST'])
 def postsView(request):
     if request.method == 'GET':
@@ -16,8 +18,11 @@ def postsView(request):
     
 
     elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response({"error": "You do not have permission!"}, status=status.HTTP_403_FORBIDDEN)
         ser_post = serializers.PostsSerializer(data=request.data)
         if ser_post.is_valid():
+            ser_post.validated_data['author'] = request.user
             ser_post.save()
             return Response(ser_post.data, status=status.HTTP_201_CREATED)
         return Response(ser_post.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -38,7 +43,7 @@ def postView(request, id):
         return Response(ser_post.data)
     
 
-    if request.method == 'DELETE':
+    elif request.method == 'DELETE':
         try:
             post = models.Post.objects.get(pk=id)
         except models.Post.DoesNotExist:
@@ -57,16 +62,21 @@ def postView(request, id):
             )
     
 
-    if request.method == 'PUT' or request.method == 'PATCH':
+    elif request.method == 'PUT' or request.method == 'PATCH':
         try:
             post = models.Post.objects.get(pk=id)
         except models.Post.DoesNotExist:
             raise NotFound("Post not found!")
         
         if request.user == post.author or request.user.is_staff:
+            data = request.data.copy()
+            data.pop('view_count', None)
+            data.pop('author', None)
+            data.pop('published_date', None)
+
             ser_post = serializers.PostSerializer(
                 post, 
-                data=request.data, 
+                data=data, 
                 partial=(request.method == 'PATCH')
                 )
             
@@ -82,7 +92,7 @@ def postView(request, id):
             )
     
 
-    if request.method == 'POST':
+    elif request.method == 'POST':
         try:
             post = models.Post.objects.get(pk=id)
         except models.Post.DoesNotExist:
@@ -111,3 +121,89 @@ def getCommentOfPostView(request, id):
     ser_comment = serializers.CommentSerializer(comment, many=True)
     
     return Response(ser_comment.data, status=status.HTTP_200_OK)
+
+
+
+
+# /comments
+
+@api_view(['GET', 'POST'])
+def commentsView(request):
+    if request.method == 'GET':
+        comments = models.Comment.objects.all()
+        ser_comments = serializers.CommentSerializer(comments, many=True)
+        return Response(ser_comments.data, status=status.HTTP_200_OK)
+    
+
+    elif request.method == 'POST':
+        if request.user.is_authenticated:
+            ser_comment = serializers.CommentSerializer(data=request.data)
+            if ser_comment.is_valid():
+                ser_comment.validated_data['author'] = request.user
+                ser_comment.save()
+                return Response(ser_comment.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"error": "You don't have permission!"}, status=status.HTTP_403_FORBIDDEN)
+
+
+
+
+@api_view(['GET', 'DELETE', 'PUT', 'PATCH'])
+def commentView(request, id):
+    if request.method == 'GET':
+        comment = models.Comment.objects.get(pk=id)
+        ser_comment = serializers.CommentSerializer(comment)
+        return Response(ser_comment.data, status=status.HTTP_200_OK)
+    
+
+    elif request.method == 'DELETE':
+        try:
+            comment = models.Comment.objects.get(pk=id)
+        except models.Comment.DoesNotExist:
+            raise NotFound("Comment not found!")
+        
+        if request.user == comment.author or request.user.is_staff:
+            comment.delete()
+            return Response({"success": "comment deleted successfully!"}, status=status.HTTP_204_NO_CONTENT)
+        
+        return Response({"error": "You don't have permission!"}, status=status.HTTP_403_FORBIDDEN)
+    
+
+    elif request.method == 'PUT' or request.method == 'PATCH':
+        try:
+            comment = models.Comment.objects.get(pk=id)
+        except models.Comment.DoesNotExist:
+            raise NotFound
+        
+        if request.user == comment.author or request.user.is_staff:
+            data = request.data.copy()
+            data.pop('post', None)
+            data.pop('author', None)
+            data.pop('published_date', None)
+
+            ser_comment = serializers.CommentSerializer(
+                comment,
+                data=data,
+                partial=(request.method == 'PATCH')
+            )
+
+            if ser_comment.is_valid():
+                ser_comment.save()
+                return Response({"success":"Successfully modifed post!"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Bad request!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(
+            {"error": "You do not have permission to delete this post!"}, 
+            status=status.HTTP_403_FORBIDDEN
+            )
+    
+
+
+
+@api_view(['GET'])
+def categoryView(request):
+    categories = models.Category.objects.all()
+    ser_cat = serializers.CategorySerializer(categories, many=True)
+
+    return Response(ser_cat.data, status=status.HTTP_200_OK)
