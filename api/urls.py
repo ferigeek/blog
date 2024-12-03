@@ -22,4 +22,5 @@ urlpatterns = [
     # path('posts/<int:id>')
     # path('posts/<int:id>/comments')
     # path('posts/<int:id>/comments'/<int:id>)
+    # path('categories')
 ]
