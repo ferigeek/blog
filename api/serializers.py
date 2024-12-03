@@ -34,5 +34,5 @@ class PostSerializer(serializers.ModelSerializer):
             'category', 
             'content', 
             'comments'
-        ]
+            ]
 
