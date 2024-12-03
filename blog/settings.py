@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
+    'djoser',
     'api',
 ]
 
@@ -131,5 +133,28 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
 		'rest_framework.renderers.BrowsableAPIRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
-    ]
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+		'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+	],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '50/minute',
+        'user': '100/minute',
+    },
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+}
+
+
+DJOSER = {
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'USER_REGISTRATION_VERIFICATION': False,
+    'SEND_ACTIVATION_EMAIL': False,
+    'LOGIN_FIELD': 'email',
+    'SERIALIZERS': {
+        'user_create': 'myapp.serializers.UserSerializer',  # Custom user serializer
+    },
 }

@@ -1,8 +1,9 @@
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, throttle_classes
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from . import models
 from . import serializers
 
@@ -10,6 +11,7 @@ from . import serializers
 # /post
 
 @api_view(['GET', 'POST'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def postsView(request):
     if request.method == 'GET':
         posts = models.Post.objects.all()
@@ -31,6 +33,7 @@ def postsView(request):
 
 
 @api_view(['GET', 'DELETE', 'PUT', 'PATCH', 'POST'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def postView(request, id):
     if request.method == 'GET':
         try:
@@ -111,6 +114,7 @@ def postView(request, id):
 
 
 @api_view(['GET'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def getCommentOfPostView(request, id):
     try:
         post = models.Post.objects.get(pk=id)
@@ -128,6 +132,7 @@ def getCommentOfPostView(request, id):
 # /comments
 
 @api_view(['GET', 'POST'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def commentsView(request):
     if request.method == 'GET':
         comments = models.Comment.objects.all()
@@ -149,6 +154,7 @@ def commentsView(request):
 
 
 @api_view(['GET', 'DELETE', 'PUT', 'PATCH'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def commentView(request, id):
     if request.method == 'GET':
         comment = models.Comment.objects.get(pk=id)
@@ -202,6 +208,7 @@ def commentView(request, id):
 
 
 @api_view(['GET'])
+@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def categoryView(request):
     categories = models.Category.objects.all()
     ser_cat = serializers.CategorySerializer(categories, many=True)
