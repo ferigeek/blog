@@ -16,11 +16,15 @@ Including another URLconf
 """
 
 from django.urls import path
+from . import views
+
 
 urlpatterns = [
-    # path('posts')
-    # path('posts/<int:id>')
-    # path('posts/<int:id>/comments')
-    # path('posts/<int:id>/comments'/<int:id>)
-    # path('categories')
+    path('posts', views.getPostsView, name='get_posts'),
+    path('posts', views.createPostView, name='create_post'),
+    # path('posts/<int:id>'),
+    # path('posts/<int:id>/comments'),
+    # path('comments')
+    # path('comments'/<int:id>),
+    # path('categories'),
 ]
