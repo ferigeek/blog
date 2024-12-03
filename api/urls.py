@@ -20,12 +20,8 @@ from . import views
 
 
 urlpatterns = [
-    path('posts', views.getPostsView, name='get_posts'),
-    path('posts', views.createPostView, name='create_post'),
-    path('posts/<int:id>', views.getPostView, name='get_post'),
-    path('posts/<int:id>', views.deletePostView, name='delete_post'),
-    path('posts/<int:id>', views.modifyPostView, name='modify_post'),
-    path('posts/<int:id>', views.addViewPostView, name="increase_view_post"),
+    path('posts', views.postsView, name='posts'),
+    path('posts/<int:id>', views.postView, name="post"),
     path('posts/<int:id>/comments', views.getCommentOfPostView, name='get_comment_post'),
     # path('comments')
     # path('comments'/<int:id>),
