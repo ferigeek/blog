@@ -5,12 +5,11 @@
 - [x] Authentication
 - [x] Throttling
 - [ ] Search and Filtering
+- [ ] Pagination
 - [x] Make everything class-based
 - [ ] Caching
 - [ ] User profile management
-- [ ] Authorization and Groups
-- [ ] Documentation with Swagger
-- [ ] Email notification
+- [X] Documentation
 - [ ] File upload
 - [ ] Testing
 
