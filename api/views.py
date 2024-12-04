@@ -1,100 +1,80 @@
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, throttle_classes
+from rest_framework import views
+from rest_framework import generics
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from . import models
 from . import serializers
-
-
-# /post
-
-@api_view(['GET', 'POST'])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
-def postsView(request):
-    if request.method == 'GET':
-        posts = models.Post.objects.all()
-        ser_posts = serializers.PostsSerializer(posts, many=True)
-        return Response(ser_posts.data)
-    
-
-    elif request.method == 'POST':
-        if not request.user.is_authenticated:
-            return Response({"error": "You do not have permission!"}, status=status.HTTP_403_FORBIDDEN)
-        ser_post = serializers.PostsSerializer(data=request.data)
-        if ser_post.is_valid():
-            ser_post.validated_data['author'] = request.user
-            ser_post.save()
-            return Response(ser_post.data, status=status.HTTP_201_CREATED)
-        return Response(ser_post.errors, status=status.HTTP_400_BAD_REQUEST)
+from . import permissions
 
 
 
+class PostsView(generics.ListCreateAPIView):
+    permission_classes= [permissions.GetPostPermission]
+    queryset = models.Post.objects.all()
+    serializer_class = serializers.PostsSerializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
-@api_view(['GET', 'DELETE', 'PUT', 'PATCH', 'POST'])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
-def postView(request, id):
-    if request.method == 'GET':
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, view_count=0)
+
+
+
+class PostView(views.APIView):
+    permission_classes = [permissions.EditingPermission]
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def get(self, request, id, *args, **kwargs):
         try:
             post = models.Post.objects.get(pk=id)
         except models.Post.DoesNotExist:
-            raise NotFound(detail='Post not found!')
-        
-        ser_post = serializers.PostSerializer(post)
+            raise NotFound("Post not found!")
 
-        return Response(ser_post.data)
+        serialized_post = serializers.PostSerializer(post)
+        return Response(serialized_post.data, status=status.HTTP_200_OK)
     
-
-    elif request.method == 'DELETE':
+    def delete(self, request, id, *args, **kwargs):
         try:
             post = models.Post.objects.get(pk=id)
         except models.Post.DoesNotExist:
             raise NotFound(detail="Post not found!")
-        
-        if post.author == request.user:
-            post.delete()
-            return Response(
-                {"success": "Post successfully deleted!"}, 
-                status=status.HTTP_204_NO_CONTENT
-                )
-
-        return Response(
-            {"error": "You do not have permission to delete this post!"}, 
-            status=status.HTTP_403_FORBIDDEN
-            )
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
-
-    elif request.method == 'PUT' or request.method == 'PATCH':
+    def handle_put_patch(self, request, is_patch):
         try:
             post = models.Post.objects.get(pk=id)
         except models.Post.DoesNotExist:
             raise NotFound("Post not found!")
         
-        if request.user == post.author:
-            data = request.data.copy()
-            data.pop('view_count', None)
-            data.pop('author', None)
-            data.pop('published_date', None)
+        author = request.data.get('author')
+        if author:
+            if author != post.author:
+                return Response({"error": "You can't change the \"author\""}, status=status.HTTP_403_FORBIDDEN)
+        view_count = request.data.get('view_count')
+        if view_count:
+            if view_count != post.view_count:
+                return Response({"error": "You can't change the \"view_count\""}, status=status.HTTP_403_FORBIDDEN)
+        publish_date = request.data.get('publish_date')
+        if publish_date:
+            if publish_date != post.publish_date:
+                return Response({"error": "You can't change the \"publish_date\""}, status=status.HTTP_403_FORBIDDEN)
 
-            ser_post = serializers.PostSerializer(
-                post, 
-                data=data, 
-                partial=(request.method == 'PATCH')
-                )
-            
-            if ser_post.is_valid():
-                ser_post.save()
-                return Response({"success":"Successfully modifed post!"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "Bad request!"}, status=status.HTTP_400_BAD_REQUEST)
+        serialized_post = serializers.PostSerializer(post, data=request.data, partial=is_patch)
         
-        return Response(
-            {"error": "You do not have permission to delete this post!"}, 
-            status=status.HTTP_403_FORBIDDEN
-            )
-    
+        if serialized_post.is_valid():
+            return Response(serialized_post.data, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'POST':
+    def put(self, request, id, *args, **kwargs):
+        self.handle_put_patch(request, False)
+        
+    def patch(self, request, id, *args, **kwargs):
+        self.handle_put_patch(request, False)
+
+    def post(self, request, id, *args, **kwargs):
         try:
             post = models.Post.objects.get(pk=id)
         except models.Post.DoesNotExist:
@@ -102,114 +82,87 @@ def postView(request, id):
         
         post.view_count += 1
         post.save()
-        post.refresh_from_db()
+        return Response({"success": "View count updated!"}, status=status.HTTP_200_OK)
+        
 
-        return Response(
-            {"success": "view count updated!", "view_count": post.view_count}, 
-            status=status.HTTP_200_OK
-            )
+
+class PostCommentView(generics.ListAPIView):
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+    serializer_class = serializers.CommentSerializer
+
+    def get_queryset(self):
+        post_id = self.kwargs['id']
+        try:
+            post = models.Post.objects.get(pk=post_id)
+        except models.Post.DoesNotExist:
+            raise NotFound("Post not found!")
+        return models.Comment.objects.filter(post=post)
+
+
+
+class CommentsView(generics.ListCreateAPIView):
+    permission_classes= [permissions.GetPostPermission]
+    queryset = models.Comment.objects.all()
+    serializer_class = serializers.CommentSerializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+
+
+class CommentView(views.APIView):
+    permission_classes = [permissions.EditingPermission]
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
+
+    def get(self, request, id, *args, **kwargs):
+        try:
+            comment = models.Comment.objects.get(pk=id)
+        except models.Comment.DoesNotExist:
+            raise NotFound("Comment not found!")
+
+        serialized_comment = serializers.CommentSerializer(comment)
+        return Response(serialized_comment.data, status=status.HTTP_200_OK)
     
-
-
-
-@api_view(['GET'])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
-def getCommentOfPostView(request, id):
-    try:
-        post = models.Post.objects.get(pk=id)
-    except models.Post.DoesNotExist:
-        raise NotFound("Post not found!")
+    def delete(self, request, id, *args, **kwargs):
+        try:
+            comment = models.Comment.objects.get(pk=id)
+        except models.Comment.DoesNotExist:
+            raise NotFound(detail="Comment not found!")
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
-    comment = models.Comment.objects.filter(post=post)
-    ser_comment = serializers.CommentSerializer(comment, many=True)
-    
-    return Response(ser_comment.data, status=status.HTTP_200_OK)
-
-
-
-
-# /comments
-
-@api_view(['GET', 'POST'])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
-def commentsView(request):
-    if request.method == 'GET':
-        comments = models.Comment.objects.all()
-        ser_comments = serializers.CommentSerializer(comments, many=True)
-        return Response(ser_comments.data, status=status.HTTP_200_OK)
-    
-
-    elif request.method == 'POST':
-        if request.user.is_authenticated:
-            ser_comment = serializers.CommentSerializer(data=request.data)
-            if ser_comment.is_valid():
-                ser_comment.validated_data['author'] = request.user
-                ser_comment.save()
-                return Response(ser_comment.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"error": "You don't have permission!"}, status=status.HTTP_403_FORBIDDEN)
-
-
-
-
-@api_view(['GET', 'DELETE', 'PUT', 'PATCH'])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
-def commentView(request, id):
-    if request.method == 'GET':
-        comment = models.Comment.objects.get(pk=id)
-        ser_comment = serializers.CommentSerializer(comment)
-        return Response(ser_comment.data, status=status.HTTP_200_OK)
-    
-
-    elif request.method == 'DELETE':
+    def handle_put_patch(self, request, is_patch):
         try:
             comment = models.Comment.objects.get(pk=id)
         except models.Comment.DoesNotExist:
             raise NotFound("Comment not found!")
         
-        if request.user == comment.author:
-            comment.delete()
-            return Response({"success": "comment deleted successfully!"}, status=status.HTTP_204_NO_CONTENT)
+        author = request.data.get('author')
+        if author:
+            if author != post.author:
+                return Response({"error": "You can't change the \"author\""}, status=status.HTTP_403_FORBIDDEN)
+        published_date = request.data.get('published_date')
+        if published_date:
+            if published_date != comment.published_date:
+                return Response({"error": "You can't change the \"published_date\""}, status=status.HTTP_403_FORBIDDEN)
+
+        serialized_comment = serializers.CommentSerializer(comment, data=request.data, partial=is_patch)
         
-        return Response({"error": "You don't have permission!"}, status=status.HTTP_403_FORBIDDEN)
-    
+        if serialized_comment.is_valid():
+            return Response(serialized_comment.data, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'PUT' or request.method == 'PATCH':
-        try:
-            comment = models.Comment.objects.get(pk=id)
-        except models.Comment.DoesNotExist:
-            raise NotFound
+    def put(self, request, id, *args, **kwargs):
+        self.handle_put_patch(request, False)
         
-        if request.user == comment.author:
-            data = request.data.copy()
-            data.pop('post', None)
-            data.pop('author', None)
-            data.pop('published_date', None)
-
-            ser_comment = serializers.CommentSerializer(
-                comment,
-                data=data,
-                partial=(request.method == 'PATCH')
-            )
-
-            if ser_comment.is_valid():
-                ser_comment.save()
-                return Response({"success":"Successfully modifed post!"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "Bad request!"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        return Response(
-            {"error": "You do not have permission to delete this post!"}, 
-            status=status.HTTP_403_FORBIDDEN
-            )
-    
+    def patch(self, request, id, *args, **kwargs):
+        self.handle_put_patch(request, False)
 
 
 
-@api_view(['GET'])
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
-def categoryView(request):
-    categories = models.Category.objects.all()
-    ser_cat = serializers.CategorySerializer(categories, many=True)
-
-    return Response(ser_cat.data, status=status.HTTP_200_OK)
+class CategoriesView(generics.ListAPIView):
+    queryset = models.Category.objects.all()
+    serializer_class = serializers.CategorySerializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]

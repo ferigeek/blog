@@ -5,7 +5,7 @@
 - [x] Authentication
 - [x] Throttling
 - [ ] Search and Filtering
-- [ ] Make everything class-based
+- [x] Make everything class-based
 - [ ] Caching
 - [ ] User profile management
 - [ ] Authorization and Groups
@@ -15,7 +15,7 @@
 - [ ] Testing
 
 
-# Environment varialbes
+# Environment variables
 
 - `SECRET_KEY`
 - `ALLOWED_HOSTS` (seperated by comma)

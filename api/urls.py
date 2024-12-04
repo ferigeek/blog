@@ -21,12 +21,12 @@ from . import views
 
 
 urlpatterns = [
-    path('posts', views.postsView, name='posts'),
-    path('posts/<int:id>', views.postView, name="post"),
-    path('posts/<int:id>/comments', views.getCommentOfPostView, name='get_comment_post'),
-    path('comments', views.commentsView, name='comments'),
-    path('comments/<int:id>', views.commentView, name='comment'),
-    path('categories', views.categoryView, name='categories'),
+    path('posts', views.PostsView.as_view(), name='posts'),
+    path('posts/<int:id>', views.PostView.as_view(), name="post"),
+    path('posts/<int:id>/comments', views.PostCommentView.as_view(), name='get_comment_post'),
+    path('comments', views.CommentsView.as_view(), name='comments'),
+    path('comments/<int:id>', views.CommentView.as_view(), name='comment'),
+    path('categories', views.CategoriesView.as_view(), name='categories'),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
