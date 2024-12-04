@@ -2,7 +2,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework import status
 from rest_framework.exceptions import NotFound
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from . import models
 from . import serializers
@@ -52,7 +51,7 @@ def postView(request, id):
         except models.Post.DoesNotExist:
             raise NotFound(detail="Post not found!")
         
-        if post.author == request.user or request.user.is_staff:
+        if post.author == request.user:
             post.delete()
             return Response(
                 {"success": "Post successfully deleted!"}, 
@@ -71,7 +70,7 @@ def postView(request, id):
         except models.Post.DoesNotExist:
             raise NotFound("Post not found!")
         
-        if request.user == post.author or request.user.is_staff:
+        if request.user == post.author:
             data = request.data.copy()
             data.pop('view_count', None)
             data.pop('author', None)
@@ -168,7 +167,7 @@ def commentView(request, id):
         except models.Comment.DoesNotExist:
             raise NotFound("Comment not found!")
         
-        if request.user == comment.author or request.user.is_staff:
+        if request.user == comment.author:
             comment.delete()
             return Response({"success": "comment deleted successfully!"}, status=status.HTTP_204_NO_CONTENT)
         
@@ -181,7 +180,7 @@ def commentView(request, id):
         except models.Comment.DoesNotExist:
             raise NotFound
         
-        if request.user == comment.author or request.user.is_staff:
+        if request.user == comment.author:
             data = request.data.copy()
             data.pop('post', None)
             data.pop('author', None)
