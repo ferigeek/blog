@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'djoser',
     'api',
     'drf_spectacular',
+    'drf_spectacular_sidecar',
 ]
 
 MIDDLEWARE = [
@@ -143,10 +144,6 @@ REST_FRAMEWORK = {
 		'rest_framework.renderers.BrowsableAPIRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
     ],
-    'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.JSONParser',
-        'rest_framework_xml.parsers.XMLParser',
-    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
 		'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -175,6 +172,9 @@ DJOSER = {
 
 
 SPECTACULAR_SETTINGS = {
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
     'TITLE': 'Blog api doc',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,

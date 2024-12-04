@@ -31,8 +31,8 @@ class PostView(views.APIView):
         except models.Post.DoesNotExist:
             raise NotFound("Post not found!")
 
-        serialized_post = serializers.PostSerializer(post)
-        return Response(serialized_post.data, status=status.HTTP_200_OK)
+        serializer = serializers.PostSerializer(post)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def delete(self, request, id, *args, **kwargs):
         try:
@@ -61,10 +61,10 @@ class PostView(views.APIView):
             if publish_date != post.publish_date:
                 return Response({"error": "You can't change the \"publish_date\""}, status=status.HTTP_403_FORBIDDEN)
 
-        serialized_post = serializers.PostSerializer(post, data=request.data, partial=is_patch)
+        serializer = serializers.PostSerializer(post, data=request.data, partial=is_patch)
         
-        if serialized_post.is_valid():
-            return Response(serialized_post.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -121,8 +121,8 @@ class CommentView(views.APIView):
         except models.Comment.DoesNotExist:
             raise NotFound("Comment not found!")
 
-        serialized_comment = serializers.CommentSerializer(comment)
-        return Response(serialized_comment.data, status=status.HTTP_200_OK)
+        serializer = serializers.CommentSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def delete(self, request, id, *args, **kwargs):
         try:
@@ -140,17 +140,17 @@ class CommentView(views.APIView):
         
         author = request.data.get('author')
         if author:
-            if author != post.author:
+            if author != comment.author:
                 return Response({"error": "You can't change the \"author\""}, status=status.HTTP_403_FORBIDDEN)
         published_date = request.data.get('published_date')
         if published_date:
             if published_date != comment.published_date:
                 return Response({"error": "You can't change the \"published_date\""}, status=status.HTTP_403_FORBIDDEN)
 
-        serialized_comment = serializers.CommentSerializer(comment, data=request.data, partial=is_patch)
+        serializer = serializers.CommentSerializer(comment, data=request.data, partial=is_patch)
         
-        if serialized_comment.is_valid():
-            return Response(serialized_comment.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
