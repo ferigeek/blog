@@ -4,9 +4,12 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from . import models
 from . import serializers
 from . import permissions
+from . import filters
 
 
 
@@ -15,6 +18,10 @@ class PostsView(generics.ListCreateAPIView):
     queryset = models.Post.objects.all()
     serializer_class = serializers.PostsSerializer
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = filters.PostFilter
+    search_fields = ['title', 'content', 'author__first_name', 'author__last_name', 'category__name']
+    ordering_fields = ['title', 'author__first_name', 'author__last_name', 'category__name', 'publish_date', 'view_count']
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, view_count=0)

@@ -4,7 +4,7 @@
 - [x] Views
 - [x] Authentication
 - [x] Throttling
-- [ ] Search and Filtering
+- [X] Search, Filtering, and Ordering
 - [ ] Pagination
 - [x] Make everything class-based
 - [ ] Caching
