@@ -5,7 +5,7 @@
 - [x] Authentication
 - [x] Throttling
 - [X] Search, Filtering, and Ordering
-- [ ] Pagination
+- [x] Pagination
 - [x] Make everything class-based
 - [ ] Caching
 - [ ] User profile management
