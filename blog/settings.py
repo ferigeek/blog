@@ -184,10 +184,13 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': False,
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
-        'user_create': 'myapp.serializers.UserSerializer',  # Custom user serializer
+        'user_create': 'myapp.serializers.UserSerializer'
+    },
+    'PERMISSIONS': {
+        'user_list': ['rest_framework.permissions.IsAdminUser']
     },
 }
-
+from rest_framework.permissions import IsAdminUser
 
 SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_DIST': 'SIDECAR',

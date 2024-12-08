@@ -2,13 +2,12 @@
 
 - [x] Models
 - [x] Views
-- [x] Authentication
+- [x] Authentication & User profile management
 - [x] Throttling
 - [x] Search, Filtering, and Ordering
 - [x] Pagination
 - [x] Make everything class-based
 - [ ] Caching
-- [ ] User profile management
 - [x] Documentation
 - [x] File upload
 - [ ] Testing
