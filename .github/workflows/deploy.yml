@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    
     # Checkout the repository
     - name: Checkout code
       uses: actions/checkout@v2
@@ -25,38 +24,36 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    # Install sshpass
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
     # Set up SSH and configure SSH connection
     - name: Set up SSH
+      env:
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SERVER_IP: ${{ secrets.SERVER_IP }}
       run: |
         mkdir -p ~/.ssh
         echo "$SSH_PASSWORD" | sshpass ssh -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "echo Connected"
 
     # Deploy to the server
     - name: Deploy to the server
+      env:
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SERVER_IP: ${{ secrets.SERVER_IP }}
+        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+        VENV_NAME: ${{ secrets.VENV_NAME }}
       run: |
-        # SSH to the server and perform deployment tasks
-        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" << EOF
-          # Navigate to project folder
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" << 'EOF'
           cd $PROJECT_PATH
-
-          # Pull the latest code
           git pull origin main
-
-          # Activate the virtual environment
           source $PROJECT_PATH/$VENV_NAME/bin/activate
-
-          # Install dependencies from requirements.txt
           pip install -r requirements.txt
-
-          # Apply database migrations
           python manage.py migrate
-
-          # Collect static files (adjust path if needed)
           python manage.py collectstatic --noinput
-
-          # Restart Apache to reflect changes
           sudo systemctl restart apache2
-
-          # Exit SSH
           exit
         EOF
