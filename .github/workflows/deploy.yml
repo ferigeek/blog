@@ -20,21 +20,41 @@ jobs:
         PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
         VENV_NAME: ${{ secrets.VENV_NAME }}
       run: |
+        # Enable error handling and verbose output
+        set -ex
+
         # Install sshpass to handle SSH with password authentication
         sudo apt-get update && sudo apt-get install -y sshpass
 
-        # Copy the application code to the server
-        sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -r ./ $SSH_USER@$SERVER_IP:$PROJECT_PATH
+        # Create a tar archive of the current directory
+        tar czf deploy.tar.gz ./*
 
-        # Connect to the server and restart Apache
-        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP <<EOF
+        # Copy the archive to the server
+        sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no deploy.tar.gz $SSH_USER@$SERVER_IP:/tmp/
+
+        # Connect to the server and perform deployment steps
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP << 'EOF'
+          set -ex
+          
+          # Clean and prepare project directory
+          rm -rf $PROJECT_PATH/*
+
+          # Extract the uploaded files
           cd $PROJECT_PATH
-          # Activate the virtual environment and run Django commands
+          tar xzf /tmp/deploy.tar.gz
+          rm /tmp/deploy.tar.gz
+          
+          # Activate virtual environment and run Django commands
           source $PROJECT_PATH/$VENV_NAME/bin/activate
+          python -m pip install -r requirements.txt
           python manage.py migrate
           python manage.py collectstatic --noinput
           deactivate
 
-          # Restart Apache to apply changes
-          sudo systemctl restart apache2
-        EOF
+          # Restart Apache with sudo (check if sudo is available and not required for the restart)
+          if command -v sudo >/dev/null 2>&1; then
+            sudo systemctl restart apache2
+          else
+            systemctl restart apache2
+          fi
+EOF
