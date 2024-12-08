@@ -44,16 +44,39 @@ jobs:
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
         SSH_USER: ${{ secrets.SSH_USER }}
         SERVER_IP: ${{ secrets.SERVER_IP }}
-        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
-        VENV_NAME: ${{ secrets.VENV_NAME }}
+        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}  # Fetching from secrets
+        VENV_NAME: ${{ secrets.VENV_NAME }}  # Fetching from secrets
       run: |
         sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" << 'EOF'
+          # Navigate to project directory
           cd $PROJECT_PATH
+
+          # Ensure we're in a Git repository
+          if [ ! -d ".git" ]; then
+            echo "Error: Not a Git repository in $PROJECT_PATH"
+            exit 1
+          fi
+
+          # Pull the latest code
           git pull origin master
+
+          # Check if virtual environment exists, if not create it
+          if [ ! -d "$PROJECT_PATH/$VENV_NAME" ]; then
+            echo "Creating virtual environment..."
+            python3 -m venv $PROJECT_PATH/$VENV_NAME
+          fi
+
+          # Activate the virtual environment
           source $PROJECT_PATH/$VENV_NAME/bin/activate
+
+          # Install dependencies
           pip install -r requirements.txt
+
+          # Run migrations and collect static files
           python manage.py migrate
           python manage.py collectstatic --noinput
+
+          # Restart Apache (if you're using Apache to serve the app)
           sudo systemctl restart apache2
           exit
         EOF
