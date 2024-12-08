@@ -1,60 +1,62 @@
-name: Deploy Django API
+name: Deploy Django API to Server
 
 on:
-  workflow_dispatch:  # Enable manual trigger
+  workflow_dispatch:  # Manual trigger through GitHub UI
 
 jobs:
   deploy:
-    name: Deploy Django API to Server
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - name: Deploy Application
-      env:
-        SERVER_IP: ${{ secrets.SERVER_IP }}
-        SSH_USER: ${{ secrets.SSH_USER }}
-        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
-        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
-        VENV_NAME: ${{ secrets.VENV_NAME }}
+    # Set up Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.x
+    
+    # Install dependencies
+    - name: Install dependencies
       run: |
-        # Enable error handling and verbose output
-        set -ex
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-        # Install sshpass to handle SSH with password authentication
-        sudo apt-get update && sudo apt-get install -y sshpass
+    # Set up SSH and configure SSH connection
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PASSWORD" | sshpass ssh -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "echo Connected"
 
-        # Create a tar archive of the current directory
-        tar czf deploy.tar.gz ./*
-
-        # Copy the archive to the server
-        sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no deploy.tar.gz $SSH_USER@$SERVER_IP:/tmp/
-
-        # Connect to the server and perform deployment steps
-        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP << 'EOF'
-          set -ex
-          
-          # Clean and prepare project directory
-          rm -rf $PROJECT_PATH/*
-
-          # Extract the uploaded files
+    # Deploy to the server
+    - name: Deploy to the server
+      run: |
+        # SSH to the server and perform deployment tasks
+        sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" << EOF
+          # Navigate to project folder
           cd $PROJECT_PATH
-          tar xzf /tmp/deploy.tar.gz
-          rm /tmp/deploy.tar.gz
-          
-          # Activate virtual environment and run Django commands
-          source $PROJECT_PATH/$VENV_NAME/bin/activate
-          python -m pip install -r requirements.txt
-          python manage.py migrate
-          python manage.py collectstatic --noinput
-          deactivate
 
-          # Restart Apache with sudo (check if sudo is available and not required for the restart)
-          if command -v sudo >/dev/null 2>&1; then
-            sudo systemctl restart apache2
-          else
-            systemctl restart apache2
-          fi
-EOF
+          # Pull the latest code
+          git pull origin main
+
+          # Activate the virtual environment
+          source $PROJECT_PATH/$VENV_NAME/bin/activate
+
+          # Install dependencies from requirements.txt
+          pip install -r requirements.txt
+
+          # Apply database migrations
+          python manage.py migrate
+
+          # Collect static files (adjust path if needed)
+          python manage.py collectstatic --noinput
+
+          # Restart Apache to reflect changes
+          sudo systemctl restart apache2
+
+          # Exit SSH
+          exit
+        EOF
