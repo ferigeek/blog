@@ -4,14 +4,15 @@
 - [x] Views
 - [x] Authentication
 - [x] Throttling
-- [X] Search, Filtering, and Ordering
+- [x] Search, Filtering, and Ordering
 - [x] Pagination
 - [x] Make everything class-based
 - [ ] Caching
 - [ ] User profile management
-- [X] Documentation
+- [x] Documentation
 - [ ] File upload
 - [ ] Testing
+- [x] Versioning
 
 
 # Environment variables

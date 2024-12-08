@@ -21,13 +21,13 @@ from . import views
 
 
 urlpatterns = [
-    path('posts', views.PostsView.as_view(), name='posts'),
-    path('posts/<int:id>', views.PostView.as_view(), name="post"),
-    path('posts/<int:id>/comments', views.PostCommentView.as_view(), name='get_comment_post'),
-    path('comments', views.CommentsView.as_view(), name='comments'),
-    path('comments/<int:id>', views.CommentView.as_view(), name='comment'),
-    path('categories', views.CategoriesView.as_view(), name='categories'),
-    path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('v1/posts', views.PostsView.as_view(), name='posts'),
+    path('v1/posts/<int:id>', views.PostView.as_view(), name="post"),
+    path('v1/posts/<int:id>/comments', views.PostCommentView.as_view(), name='get_comment_post'),
+    path('v1/comments', views.CommentsView.as_view(), name='comments'),
+    path('v1/comments/<int:id>', views.CommentView.as_view(), name='comment'),
+    path('v1/categories', views.CategoriesView.as_view(), name='categories'),
+    path('v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('v1/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('v1/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
