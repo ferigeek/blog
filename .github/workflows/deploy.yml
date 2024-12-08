@@ -49,7 +49,7 @@ jobs:
       run: |
         sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" << 'EOF'
           cd $PROJECT_PATH
-          git pull origin main
+          git pull origin master
           source $PROJECT_PATH/$VENV_NAME/bin/activate
           pip install -r requirements.txt
           python manage.py migrate
