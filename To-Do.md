@@ -13,6 +13,7 @@
 - [x] File upload
 - [ ] Testing
 - [x] Versioning
+- [ ] Deployment
 
 
 # Environment variables
@@ -28,4 +29,10 @@
     - `DB_HOST`
     - *If not provided, **sqlite** will be used.*
 - `TIME_ZONE` (Default: `UTC`)
-
+- `DEBUG`
+- `CSRF_COOKIE_SECURE`
+- `SESSION_COOKIE_SECURE`
+- `SECURE_SSL_REDIRECT`
+- `SECURE_HSTS_SECONDS`
+- `SECURE_HSTS_INCLUDE_SUBDOMAINS`
+- `SECURE_HSTS_PRELOAD`
