@@ -32,7 +32,8 @@ class PostSerializer(serializers.ModelSerializer):
             'view_count', 
             'publish_date', 
             'author', 
-            'category', 
+            'category',
+            'image',
             'content', 
             'comments'
             ]

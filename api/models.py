@@ -27,6 +27,7 @@ class Post(models.Model):
     publish_date = models.DateTimeField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ImageField(upload_to='posts/', default='posts/Default.jpg')
 
     def __str__(self):
         return self.title

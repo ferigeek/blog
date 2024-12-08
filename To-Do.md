@@ -10,7 +10,7 @@
 - [ ] Caching
 - [ ] User profile management
 - [x] Documentation
-- [ ] File upload
+- [x] File upload
 - [ ] Testing
 - [x] Versioning
 
