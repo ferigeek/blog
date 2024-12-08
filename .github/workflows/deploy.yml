@@ -1,0 +1,42 @@
+name: Deploy Blog API
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on pushes to the main branch
+
+jobs:
+  deploy:
+    name: Deploy Blog API to Server
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Deploy Application
+      env:
+        SERVER_IP: ${{ secrets.SERVER_IP }}
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+        VENV_NAME: ${{ secrets.VENV_NAME }}
+      run: |
+        # Install sshpass to handle SSH with password authentication
+        sudo apt-get update && sudo apt-get install -y sshpass
+
+        # Copy the application code to the server
+        sshpass -p "$SSH_PASSWORD" scp -r . $SSH_USER@$SERVER_IP:$PROJECT_PATH
+
+        # Connect to the server and restart Apache
+        sshpass -p "$SSH_PASSWORD" ssh $SSH_USER@$SERVER_IP <<EOF
+          cd $PROJECT_PATH
+          # Activate the virtual environment and run Django commands
+          source $PROJECT_PATH/$VENV_NAME/bin/activate
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+          deactivate
+
+          # Restart Apache to apply changes
+          sudo systemctl restart apache2
+        EOF
