@@ -24,7 +24,7 @@ jobs:
         sudo apt-get update && sudo apt-get install -y sshpass
 
         # Copy the application code to the server
-        sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -r . $SSH_USER@$SERVER_IP:$PROJECT_PATH
+        sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -r ./ $SSH_USER@$SERVER_IP:$PROJECT_PATH
 
         # Connect to the server and restart Apache
         sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USER@$SERVER_IP <<EOF
