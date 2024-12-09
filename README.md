@@ -12,7 +12,7 @@
 - [x] File upload
 - [ ] Testing
 - [x] Versioning
-- [ ] Deployment
+- [x] Deployment
 
 
 # Environment variables
@@ -35,3 +35,4 @@
 - `SECURE_HSTS_SECONDS`
 - `SECURE_HSTS_INCLUDE_SUBDOMAINS`
 - `SECURE_HSTS_PRELOAD`
+- `RENDERER_CLASSES`

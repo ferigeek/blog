@@ -144,11 +144,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'api.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-		'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework_xml.renderers.XMLRenderer',
-    ],
+    'DEFAULT_RENDERER_CLASSES': os.getenv('RENDERER_CLASSES', 'rest_framework.renderers.JSONRenderer,rest_framework.renderers.BrowsableAPIRenderer,rest_framework_xml.renderers.XMLRenderer').split(','),
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',
