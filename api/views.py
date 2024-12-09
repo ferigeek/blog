@@ -1,3 +1,4 @@
+import datetime
 from rest_framework.response import Response
 from rest_framework import views
 from rest_framework import generics
@@ -8,10 +9,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
-from . import models
-from . import serializers
-from . import permissions
-from . import filters
+from . import models, serializers, permissions, filters
 
 
 
@@ -47,7 +45,7 @@ class PostsView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, view_count=0)
+        serializer.save(author=self.request.user, publish_date=datetime.datetime.now(), view_count=0)
 
 
 
