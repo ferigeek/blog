@@ -18,7 +18,6 @@ Including another URLconf
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from . import views
 
 
@@ -29,9 +28,6 @@ urlpatterns = [
     path('v1/comments', views.CommentsView.as_view(), name='comments'),
     path('v1/comments/<int:id>', views.CommentView.as_view(), name='comment'),
     path('v1/categories', views.CategoriesView.as_view(), name='categories'),
-    path('v1/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('v1/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('v1/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 if settings.DEBUG:
